@@ -1,33 +1,37 @@
----
-title: "Homework 1"
-author: "Ricky Sun"
-date: "1/18/2023"
-output: 
-  html_document: default
-  github_document: default
----
+Homework 1
+================
+Ricky Sun
+1/18/2023
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-Using the RMarkdown/knitr/github mechanism, implement the following tasks by extending the example R script mixture-data-lin-knn.R:
-Paste the code from the mixture-data-lin-knn.R file into the homework template Knitr document.
-Read the help file for R's built-in linear regression function lm
-Re-write the functions fit_lc and predict_lc using lm, and the associated predict method for lm objects.
-Consider making the linear classifier more flexible, by adding squared terms for x1 and x2 to the linear model
-Describe how this more flexible model affects the bias-variance tradeoff
-
+Using the RMarkdown/knitr/github mechanism, implement the following
+tasks by extending the example R script mixture-data-lin-knn.R: Paste
+the code from the mixture-data-lin-knn.R file into the homework template
+Knitr document. Read the help file for R’s built-in linear regression
+function lm Re-write the functions fit_lc and predict_lc using lm, and
+the associated predict method for lm objects. Consider making the linear
+classifier more flexible, by adding squared terms for x1 and x2 to the
+linear model Describe how this more flexible model affects the
+bias-variance tradeoff
 
 ## load package
-```{r}
+
+``` r
 library('class')
 library('tidyverse')
 ```
 
+    ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+    ## ✔ ggplot2 3.4.0      ✔ purrr   0.3.5 
+    ## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
+    ## ✔ tidyr   1.2.1      ✔ stringr 1.4.1 
+    ## ✔ readr   2.1.2      ✔ forcats 0.5.1 
+    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::filter() masks stats::filter()
+    ## ✖ dplyr::lag()    masks stats::lag()
 
 ## load data
-```{r}
+
+``` r
 ## load binary classification example data from author website 
 ## 'ElemStatLearn' package no longer available
 load(url('https://web.stanford.edu/~hastie/ElemStatLearn/datasets/ESL.mixture.rda'))
@@ -35,7 +39,8 @@ dat <- ESL.mixture
 ```
 
 ## Data overview
-```{r}
+
+``` r
 plot_mix_data <- function(dat, datboot=NULL) {
   if(!is.null(datboot)) {
     dat$x <- datboot$x
@@ -55,8 +60,11 @@ plot_mix_data <- function(dat, datboot=NULL) {
 plot_mix_data(dat)
 ```
 
+![](Homework-1_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
 ## fit linear classifier
-```{r}
+
+``` r
 # fit_lc <- function(y, x) {
 #   x <- cbind(1, x)
 #   beta <- drop(solve(t(x)%*%x)%*%t(x)%*%y)
@@ -71,18 +79,17 @@ fit_lc_square <- function(y, x) {
   x_squared2 = (x[,2])^2
   beta <- lm(y~x+x_squared1+x_squared2)
 }
-
 ```
 
-```{r}
+``` r
 # fit = lm(y~x)
 # dat = data.frame(y=y, x=x)
 # predict(fit)
 ```
 
-
 ## make predictions from linear classifier
-```{r}
+
+``` r
 # predict_lc <- function(x, beta) {
 #   cbind(1, x) %*% beta
 # }
@@ -94,12 +101,11 @@ predict_lc <- function(x, beta) {
 predict_lc_square <- function(x, beta) {
   cbind(1, x, (x[,1])^2, (x[,2])^2) %*% beta$coefficients
 }
-
 ```
 
 ## fit model to mixture data and make predictions
 
-```{r}
+``` r
 # linear terms
 lc_beta <- fit_lc(dat$y, dat$x)
 lc_pred <- predict_lc(dat$xnew, lc_beta)
@@ -109,52 +115,69 @@ lc_beta_square <- fit_lc_square(dat$y, (dat$x))
 lc_pred_square <- predict_lc_square(dat$xnew, lc_beta_square)
 ```
 
-
 ## reshape predictions as a matrix for linear model (no squared terms)
-```{r}
+
+``` r
 lc_pred <- matrix(lc_pred, length(dat$px1), length(dat$px2))
 contour(lc_pred,
         xlab=expression(x[1]),
         ylab=expression(x[2]))
 ```
 
+![](Homework-1_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
 ## find the contours in 2D space such that lc_pred == 0.5
-```{r}
+
+``` r
 lc_cont <- contourLines(dat$px1, dat$px2, lc_pred, levels=0.5)
 ```
 
 ## plot data and decision surface for linear model (no squared terms)
-```{r}
+
+``` r
 plot_mix_data(dat)
 sapply(lc_cont, lines)
 ```
 
+![](Homework-1_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
+    ## [[1]]
+    ## NULL
 
 # Adding Squared Terms
 
 ## reshape predictions as a matrix for linear model (with squared terms)
-```{r}
+
+``` r
 lc_pred_square <- matrix(lc_pred_square, length(dat$px1), length(dat$px2))
 contour(lc_pred_square,
         xlab=expression(x[1]),
         ylab=expression(x[2]))
 ```
 
+![](Homework-1_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
 ## find the contours in 2D space such that lc_pred_square == 0.5
-```{r}
+
+``` r
 lc_cont <- contourLines(dat$px1, dat$px2, lc_pred_square, levels=0.5)
 ```
 
 ## plot data and decision surface for linear model (with squared terms)
-```{r}
+
+``` r
 plot_mix_data(dat)
 sapply(lc_cont, lines)
 ```
 
+![](Homework-1_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+    ## [[1]]
+    ## NULL
 
 ## do bootstrap to get a sense of variance in decision surface
-```{r}
+
+``` r
 resample <- function(dat) {
   idx <- sample(1:length(dat$y), replace = T)
   dat$y <- dat$y[idx]
@@ -164,7 +187,8 @@ resample <- function(dat) {
 ```
 
 ## plot linear classifier (no squared terms) for three bootstraps
-```{r}
+
+``` r
 par(mfrow=c(1,3))
 for(b in 1:3) {
   datb <- resample(dat)
@@ -184,8 +208,11 @@ for(b in 1:3) {
 }
 ```
 
+![](Homework-1_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
 ## plot linear classifier (with squared terms) for three bootstraps
-```{r}
+
+``` r
 par(mfrow=c(1,3))
 for(b in 1:3) {
   datb <- resample(dat)
@@ -205,9 +232,11 @@ for(b in 1:3) {
 }
 ```
 
+![](Homework-1_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ## plot 5-NN classifier for three bootstraps
-```{r}
+
+``` r
 par(mfrow=c(1,3))
 for(b in 1:3) {
   datb <- resample(dat)
@@ -228,9 +257,11 @@ for(b in 1:3) {
 }
 ```
 
+![](Homework-1_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ## plot 20-NN classifier for three bootstraps
-```{r}
+
+``` r
 par(mfrow=c(1,3))
 for(b in 1:3) {
   datb <- resample(dat)
@@ -251,14 +282,14 @@ for(b in 1:3) {
 }
 ```
 
+![](Homework-1_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ## Describe how this more flexible model affects the bias-variance tradeoff
 
-Adding squared terms to the model (make the model more flexible) seems to lower the biases (the true value seems to be non-linear and have higher power (such as squared) relations) but this could increase the variance of the model and make the model more likely to overfit. But in general, this more flexible model seems to have a better balance (as compared to the model without squared terms) of bias-variance and the variance may not increase a lot as compared to the lowering in biases.
-
-
-
-
-
-
-
+Adding squared terms to the model (make the model more flexible) seems
+to lower the biases (the true value seems to be non-linear and have
+higher power (such as squared) relations) but this could increase the
+variance of the model and make the model more likely to overfit. But in
+general, this more flexible model seems to have a better balance (as
+compared to the model without squared terms) of bias-variance and the
+variance may not increase a lot as compared to the lowering in biases.
