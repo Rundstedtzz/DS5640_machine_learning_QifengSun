@@ -91,9 +91,17 @@ predict_lc <- function(x, beta) {
   cbind(1, x) %*% beta$coefficients
 }
 
+# predict_lc <- function(x, beta) {
+#   predict(beta, x)
+# }
+
 predict_lc_square <- function(x, beta) {
   cbind(1, x, (x[,1])^2, (x[,2])^2) %*% beta$coefficients
 }
+
+# predict_lc_square <- function(x, beta) {
+#   predict(beta, x)
+# }
 
 ```
 
