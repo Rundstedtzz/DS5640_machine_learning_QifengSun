@@ -1,0 +1,98 @@
+---
+title: "homework 5"
+author: "Ricky Sun"
+date: "2023-04-03"
+output: 
+  html_document: default
+  github_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load data and packages
+```{r}
+library('randomForest')  ## fit random forest
+library('dplyr')    ## data manipulation
+library('tidyverse')
+library('magrittr') ## for '%<>%' operator
+library('gpairs')   ## pairs plot
+library('viridis')  ## viridis color palette
+library('caret')
+library('corrplot')
+library('ggplot2')
+```
+
+```{r}
+vowel = read_csv(url('https://hastie.su.domains/ElemStatLearn/datasets/vowel.train'))
+vowel2<- read.csv(url('https://hastie.su.domains/ElemStatLearn/datasets/vowel.test'))
+```
+
+
+Goal: Understand and implement a random forest classifier.
+
+Using the “vowel.train” data, develop a random forest (e.g., using the "randomForest" package) or gradient boosted classifier for the vowel data.
+
+Fit a random forest or gradient boosted model to the “vowel.train” data using all of the 11 features using the default values of the tuning parameters.
+```{r}
+vowel <- vowel %>% 
+  select(-row.names) %>% 
+  mutate(y = as.factor(y))
+
+vowel2 <- vowel2 %>% 
+  select(-row.names) %>% 
+  mutate(y = as.factor(y))
+
+fit <- randomForest(y ~ ., data=vowel)
+# ntree=500, mtry=2, proximity=TRUE)
+```
+
+Use 5-fold CV to tune the number of variables randomly sampled as candidates at each split if using random forest, or the ensemble size if using gradient boosting.
+```{r}
+set.seed('666')
+vowel_folds  <- createFolds(vowel$y, k=5)
+print(vowel_folds)
+sapply(vowel_folds, length)  
+
+train_control <- trainControl(method = "cv",
+                              number = 5,
+                              index = vowel_folds)
+
+# Set a range of values for the "mtry" hyperparameter
+mtry_values <- seq(1, ncol(vowel) - 1, by = 1) 
+
+# Train the model using random forest and tune the "mtry" hyperparameter
+model <- train(y ~ ., 
+               data = vowel,
+               method = "rf",
+               metric = "Accuracy", 
+               trControl = train_control,
+               tuneGrid = expand.grid(.mtry = mtry_values))
+
+
+print(model$bestTune)
+print(model$results)
+plot(model)
+
+```
+Thus, it seems that mtry = 5 seems to be the best performing parameter
+
+With the tuned model, make predictions using the majority vote method, and compute the misclassification rate using the ‘vowel.test’ data.
+```{r}
+test_predictions <- predict(model, newdata = vowel2)
+actual_values <- vowel2$y
+
+confusion_mtx <- confusionMatrix(test_predictions, actual_values)
+print(confusion_mtx)
+```
+
+```{r}
+# Calculate the misclassification rate
+misclassification_rate <- 1 - confusion_mtx$overall["Accuracy"]
+cat("Misclassification Rate:", misclassification_rate, "\n")
+```
+
+In the context of a Random Forest classifier, the majority vote method is implicitly used when making predictions. The Random Forest algorithm consists of multiple decision trees, each trained on a different subset of the dataset. When making a prediction, each decision tree provides a class label, and the majority vote method is applied to select the final prediction based on the class labels from all the decision trees.
+
+
