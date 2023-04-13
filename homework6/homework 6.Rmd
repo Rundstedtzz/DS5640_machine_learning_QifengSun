@@ -1,0 +1,124 @@
+---
+title: "homework 6"
+author: "Ricky Sun"
+date: "2023-04-10"
+output: 
+  github_document: default
+  html_document: default
+---
+Instructions:
+
+Goal: Get started using Keras to construct simple neural networks
+- Read through the "Image Classification" tutorial on the RStudio Keras website.
+- Use the Keras library to create a convolutional neural network similar to (or more sophisticated than) "Net-5" described during lecture on 4/4 and also described in the ESL book section 11.7. See the ConvNet tutorial on the RStudio Keras website.
+- Fit the CNN to the zipcode data from the authors website and create a figure similar to that from the slides that shows test error as a function of training epochs.
+
+Since I am not able to use my computer to run, I am borrowing Jiayu's computer to run.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load data and packages
+```{r}
+library(keras)
+library(tidyverse)
+library(tensorflow)
+library(reticulate)
+library(tidyr)
+library(ggplot2)
+# py_config()
+# path_to_python <- "/Users/ricky/opt/anaconda3/bin/python3"
+# use_python(path_to_python)
+# install_tensorflow()
+```
+
+```{r}
+# use_python("/Library/Frameworks/Python.framework/Versions/3.11/bin/python3")
+
+```
+
+
+```{r}
+# path_to_zip_train <- "/Users/stoneman/Library/CloudStorage/OneDrive-Vanderbilt/Machine\ Learning/Machine-Learning-HW/HW6/zip.train"
+# 
+# # Read in the file using read.table
+# train_data  <- read.table(path_to_zip_train, header = FALSE)
+# 
+# # View the first few rows of the dataset
+# head(train_data)
+
+train_data = read.csv('/Users/ricky/Desktop/Spring 2023/DS5640_machine_learning_QifengSun/homework6/train', header = FALSE, sep = " ")
+test_data = read.csv('/Users/ricky/Desktop/Spring 2023/DS5640_machine_learning_QifengSun/homework6/test', header = FALSE, sep = " ")
+```
+
+# data processing
+```{r}
+train_labels <- train_data$V1
+train_pixels <- as.matrix(train_data[, -1])
+# train_images <- array_reshape(train_pixels, c(nrow(train_pixels), 16, 16, 1))
+train_images <- array(train_pixels, dim = c(nrow(train_pixels), 16, 16, 1))
+```
+
+# set parameters
+```{r}
+# batch_size <- 32
+# epochs <- 50
+# data_augmentation <- FALSE
+tf_version <- tensorflow::tf_config()$version
+print(tf_version)
+```
+
+# model building
+```{r}
+# Create a custom shared convolutional layer
+input_shape <- c(16, 16, 1)
+shared_conv_layer <- layer_conv_2d(filters = 2, 
+                                   kernel_size = c(8, 8), 
+                                   padding = "same", 
+                                   activation = "relu", 
+                                   input_shape = input_shape)
+```
+
+```{r}
+# Define the model architecture
+input <- layer_input(shape = input_shape, name = "Input")
+x1 <- shared_conv_layer(input)
+x2 <- shared_conv_layer(input)
+merged <- layer_add(list(x1, x2))
+conv2 <- layer_conv_2d(filters = 4, kernel_size = c(4, 4), padding = "same", activation = "relu", name = "Conv_Layer_2")(merged)
+flat <- layer_flatten()(conv2)
+output <- layer_dense(units = 10, activation = 'softmax', name = "Output_Layer")(flat)
+```
+
+```{r}
+# Create the model
+model <- keras_model(inputs = input, outputs = output)
+
+# Compile the model
+model %>% compile(
+  loss = 'sparse_categorical_crossentropy',
+  optimizer = optimizer_rmsprop(lr = 0.005),
+  metrics = c('accuracy')
+)
+
+# Train the model
+history <- model %>% fit(
+  train_images, train_labels,
+  epochs = 10,
+  batch_size = 32,
+  validation_split = 0.2
+)
+```
+
+```{r}
+# Plot the training history
+plot(history)
+```
+
+
+
+
+
+
+
